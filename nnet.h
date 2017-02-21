@@ -18,10 +18,10 @@ private:
 
 // sizes of the individual layers, including input and output layers, not including bias
 // but bias is included by default
-  std::vector<int> l_size; 
+  std::vector<arma::uword> l_size; 
 
 // number of layers, equal to l_size.size()
-  int n;
+  size_t n;
 
 // layers z, a and delta (for backpropagation), vectors of double
   std::vector<vec> z;
@@ -43,24 +43,21 @@ private:
   int MIN_MAXITER;
 
 // apply sigmoid function to k-th z layer
-  vec Sigmoid(int k);
-  vec SigmoidGradient(int k);
-
-// max function, returns greater
-  double max(double a, double b);
+  vec Sigmoid(size_t k);
+  vec SigmoidGradient(size_t k);
 
 // calculates the value of the cost function for given data
   double CostFunction(bool verbose);  
 
 //  evaluate a single digit with current network and output result
-  bool EvaluateSingleDigit(Digit &input);
+  bool EvaluateSingleDigit(const Digit &input);
 
 // after evaluating a digit, backpropagate to obtain gradients
 // function assumes a and z layers have been determined
-  void BackpropagateSingleDigit(Digit &input);
+  void BackpropagateSingleDigit(const Digit &input);
 
 // calculate gradients directly and output
-  mat CheckGradient(std::vector<Digit> data, int k);  
+  mat CheckGradient(size_t k);  
 
 // vectorise and reshape theta and theta_grad
   vec MatrixToVector(std::vector<mat> m);
@@ -75,8 +72,8 @@ private:
   void UpdateHesseInverse(mat &hesseinv,double fac1, double fac2, double fac3, vec &xi, vec &hdg, vec &dgrad);
 
 public:
-  NNetwork(std::string name, std::vector<int> len) {
-    this->name = name;
+  NNetwork(std::string nnet_name, std::vector<arma::uword> len) {
+    this->name = nnet_name;
 
     if(len.size() < 3) {
       cout << "Invalid network initialization." << endl;
@@ -90,7 +87,7 @@ public:
     lambda = 0.1;
 
 // setup layers
-    for(int i = 0; i < n - 1; ++i) {
+    for(size_t i = 0; i < n - 1; ++i) {
       z.push_back(zeros<vec>(l_size[i]));
       a.push_back(zeros<vec>(l_size[i] + 1));
       delta.push_back(zeros<vec>(l_size[i]));
@@ -100,8 +97,8 @@ public:
     delta.push_back(zeros<vec>(l_size[n-1]));
 
 // setup matrices
-//    arma_rng::set_seed_random(); // init rng
-    for(int i = 0; i < n - 1; ++i) {
+    arma_rng::set_seed_random(); // init rng
+    for(size_t i = 0; i < n - 1; ++i) {
       theta.push_back(randu<mat>(l_size[i + 1],l_size[i] + 1));
       theta[i] = 2*theta[i] - 1.0;
       theta_grad.push_back(zeros<mat>(l_size[i + 1],l_size[i] + 1));
@@ -115,10 +112,10 @@ public:
   NNetwork(std::string fname) {
     std::ifstream infile(fname, ios::in);
 
-    int tmpval;
+    arma::uword tmpval;
 
     infile >> n;
-    for(int i = 0; i < n; ++i) {
+    for(size_t i = 0; i < n; ++i) {
       infile >> tmpval;
       l_size.push_back(tmpval);
     }
@@ -127,7 +124,7 @@ public:
     lambda = 0.1;
 
 // setup layers
-    for(int i = 0; i < n - 1; ++i) {
+    for(size_t i = 0; i < n - 1; ++i) {
       z.push_back(zeros<vec>(l_size[i]));
       a.push_back(zeros<vec>(l_size[i] + 1));
       delta.push_back(zeros<vec>(l_size[i]));
@@ -137,12 +134,12 @@ public:
     delta.push_back(zeros<vec>(l_size[n-1]));
 
 // setup matrices
-    int nr,nc;
-    for(int i = 0; i < n - 1; ++i) {
+    arma::uword nr,nc;
+    for(size_t i = 0; i < n - 1; ++i) {
       infile >> nr >> nc;
       theta.push_back(zeros<mat>(l_size[i+1],l_size[i] + 1));
-      for(int row = 0; row < nr; ++row)
-        for(int col = 0; col < nc; ++col)
+      for(arma::uword row = 0; row < nr; ++row)
+        for(arma::uword col = 0; col < nc; ++col)
           infile >> theta[i].at(row,col);
       theta_grad.push_back(zeros<mat>(l_size[i + 1],l_size[i] + 1));
     }
@@ -155,13 +152,13 @@ public:
   }
 
 // setup a network name
-  void SetName(std::string name);
+  void SetName(std::string new_name);
 
 // get network name
   std::string GetName();
 
 // get number of layers
-  int GetNumLayers();
+  size_t GetNumLayers();
 
 // check if network is initiaized
   bool IsEmpty();
@@ -176,7 +173,7 @@ public:
   void PrintOutputLayer();  
 
 // driver function for gradient checking
-  void CheckGradientDriver(std::vector<Digit> data);
+  void CheckGradientDriver();
 
 // minimization algorithm
   double MinimizeNetwork();

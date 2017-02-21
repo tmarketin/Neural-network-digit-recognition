@@ -20,7 +20,7 @@ void Digit::SetLabel(unsigned char k) {
   return;
 }
 
-std::vector<double> Digit::GetLabel() {
+std::vector<double> Digit::GetLabel() const {
   return this->layer;
 }
 
@@ -28,15 +28,15 @@ int Digit::GetDigit() {
   return static_cast<int>(this->label);
 }
 
-void Digit::SetSize(int x, int y) {
-  x_size = x;
-  y_size = y;
+void Digit::SetSize(unsigned int x, unsigned int y) {
+  x_size = static_cast<unsigned char>(x);
+  y_size = static_cast<unsigned char>(y);
 
   return;
 }
 
 bool Digit::SetValue(std::vector<unsigned char> v) {
-  int len = v.size();
+  size_t len = v.size();
 
   if(len != x_size*y_size) {
     cout << "Mismatch in vector size!" << endl;
@@ -46,7 +46,7 @@ bool Digit::SetValue(std::vector<unsigned char> v) {
   std::vector<double> tmp;
   tmp.clear();
 
-  for(int i = 0; i < v.size(); i++)
+  for(size_t i = 0; i < v.size(); i++)
     tmp.push_back(static_cast<double>(v[i])/255.0);
 
   this->num = tmp;
@@ -54,18 +54,18 @@ bool Digit::SetValue(std::vector<unsigned char> v) {
   return true;
 }
 
-std::vector<double> Digit::GetValue() {
+std::vector<double> Digit::GetValue() const {
   return this->num;
 }
 
 std::ostream& operator<< (std::ostream &out, const Digit &digit) {
   out << "Value: " << static_cast<int>(digit.label) << endl;
-  for(int i = 0; i < digit.layer.size(); i++)
+  for(size_t i = 0; i < digit.layer.size(); i++)
     out << digit.layer[i] << " ";
   out << endl;
 
-  for(int i = 0; i < digit.y_size; i++) {
-    for(int j = 0; j < digit.x_size; j++)
+  for(size_t i = 0; i < digit.y_size; i++) {
+    for(size_t j = 0; j < digit.x_size; j++)
       out << setw(4) << static_cast<int>(digit.num[i*digit.x_size + j]*255);
     out << endl;
   }

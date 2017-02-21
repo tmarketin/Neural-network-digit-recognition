@@ -3,6 +3,7 @@
 #include <vector>
 #include <random>
 #include <fstream>
+#include <algorithm>
 
 #include <cmath>
 #include <ctime>
@@ -20,22 +21,21 @@ using namespace arma;
 
 // test network and compare
 void NNetwork::TestNetwork(bool verbose) {
-  int n_data = data_test.size();
-  int n_output = a.size() - 1; // index of output layer
+  size_t n_output = a.size() - 1; // index of output layer
   int count_correct = 0;
-  int idx_max;
+  arma::uword idx_max;
 
   cout << endl << "Testing network on training data, " << data_train.size() << " data points." << endl;
   count_correct = 0;
-  for(int i = 0; i < data_train.size(); ++i) {
+  for(size_t i = 0; i < data_train.size(); ++i) {
     EvaluateSingleDigit(data_train[i]);
 
     idx_max = 0;
-    for(int j = 1; j < a[n_output].size(); ++j)
+    for(arma::uword j = 1; j < static_cast<arma::uword>(a[n_output].size()); ++j)
       if(a[n_output][j] > a[n_output][idx_max])
         idx_max = j;
 
-    if(idx_max == data_train[i].GetDigit()) {
+    if(idx_max == static_cast<arma::uword>(data_train[i].GetDigit())) {
       if(verbose)
         cout << "Success!" << endl;
       count_correct++;
@@ -43,24 +43,24 @@ void NNetwork::TestNetwork(bool verbose) {
 
     if(verbose) {
       cout << "Digit: " << data_train[i].GetDigit() << endl;
-      for(int j = 0; j < a[n_output].size(); ++j)
+      for(arma::uword j = 0; j < static_cast<arma::uword>(a[n_output].size()); ++j)
         cout << a[n_output][j] << " ";
       cout << endl << endl;
     }
   }
-  cout << "Final success rate: " << count_correct << "/" << data_train.size() << " = " << (double)count_correct/(double)data_train.size() << endl << endl;
+  cout << "Final success rate: " << count_correct << "/" << data_train.size() << " = " << static_cast<double>(count_correct)/static_cast<double>(data_train.size()) << endl << endl;
 
   cout << "Testing network on test data, " << data_test.size() << " data points." << endl;
   count_correct = 0;
-  for(int i = 0; i < data_test.size(); ++i) {
+  for(size_t i = 0; i < data_test.size(); ++i) {
     EvaluateSingleDigit(data_test[i]);
 
     idx_max = 0;
-    for(int j = 1; j < a[n_output].size(); ++j)
+    for(arma::uword j = 1; j < static_cast<arma::uword>(a[n_output].size()); ++j)
       if(a[n_output][j] > a[n_output][idx_max])
         idx_max = j;
 
-    if(idx_max == data_test[i].GetDigit()) {
+    if(idx_max == static_cast<arma::uword>(data_test[i].GetDigit())) {
       if(verbose)
         cout << "Success!" << endl;
       count_correct++;
@@ -68,26 +68,26 @@ void NNetwork::TestNetwork(bool verbose) {
 
     if(verbose) {
       cout << "Digit: " << data_test[i].GetDigit() << endl;
-      for(int j = 0; j < a[n_output].size(); ++j)
+      for(arma::uword j = 0; j < static_cast<arma::uword>(a[n_output].size()); ++j)
         cout << a[n_output][j] << " ";
       cout << endl << endl;
     }
   }
 
-  cout << "Final success rate: " << count_correct << "/" << data_test.size() << " = " << (double)count_correct/(double)data_test.size() << endl;
+  cout << "Final success rate: " << count_correct << "/" << data_test.size() << " = " << static_cast<double>(count_correct)/static_cast<double>(data_test.size()) << endl;
 
   return;
 }
 
 // calculates the value of the cost function and gradients for given data
 double NNetwork::CostFunction(bool verbose) {
-  int n_data = data_train.size();
+  size_t n_data = data_train.size();
 
-  for(int i = 0; i < n - 1; ++i)
+  for(size_t i = 0; i < n - 1; ++i)
     theta_grad[i].zeros();
 
   double cost = 0.0;
-  for(int i = 0; i < n_data; i++) {
+  for(size_t i = 0; i < n_data; i++) {
     vec inputval(data_train[i].GetLabel());
 
     EvaluateSingleDigit(data_train[i]);
@@ -102,18 +102,18 @@ double NNetwork::CostFunction(bool verbose) {
     if(verbose)
       cout << "Cost tmp value: " << cost << endl;   
 
-    for(int i = n - 2; i >= 0; --i) {
-      theta_grad[i] = theta_grad[i] + delta[i+1]*(a[i].t());
+    for(int layer = static_cast<int>(n - 2); layer >= 0; --layer) {
+      theta_grad[static_cast<size_t>(layer)] = theta_grad[static_cast<size_t>(layer)] + delta[static_cast<size_t>(layer + 1)]*(a[static_cast<size_t>(layer)].t());
     }
   }
 
-  for(int i = 0; i < n - 1; i++) // cost function regularization
+  for(size_t i = 0; i < n - 1; i++) // cost function regularization
     cost = cost + 0.5*lambda*accu(theta[i].submat(0,1,l_size[i+1]-1,l_size[i]) % theta[i].submat(0,1,l_size[i+1]-1,l_size[i]));
     
   cost = cost/static_cast<double>(n_data);    
 
-  for(int i = 0; i < n - 1; ++i)
-    theta_grad[i] = (theta_grad[i] + lambda*join_rows(zeros<vec>(theta[i].n_rows),theta[i].submat(span::all,span(1,theta[i].n_cols-1))))/(double)n_data;
+  for(size_t i = 0; i < n - 1; ++i)
+    theta_grad[i] = (theta_grad[i] + lambda*join_rows(zeros<vec>(theta[i].n_rows),theta[i].submat(span::all,span(1,theta[i].n_cols-1))))/static_cast<double>(n_data);
 
   return cost;
 } 
@@ -124,13 +124,13 @@ double NNetwork::CostFunction(bool verbose) {
 // trebalo bi provjeriti relativna odstupanja svih elemenata matrica i ispisati range
 // =================================
 
-void NNetwork::CheckGradientDriver(std::vector<Digit> data) {
+void NNetwork::CheckGradientDriver() {
   cout << "Cost function value: " << CostFunction(false) << endl;
 
   cout << endl << "Theta_grad 0 " << endl;
   cout << theta_grad[0].submat(span(0,9),span(0,1)) << endl;
 
-  mat grad_exact = CheckGradient(data,0);
+  mat grad_exact = CheckGradient(0);
 
   cout << endl << "Theta_grad 0 exact: " << endl;
   cout << grad_exact << endl;
@@ -138,7 +138,7 @@ void NNetwork::CheckGradientDriver(std::vector<Digit> data) {
   cout << "Theta_grad 1 " << endl;
   cout << theta_grad[1].submat(span::all,span(0,1)) << endl;
 
-  grad_exact = CheckGradient(data,1);
+  grad_exact = CheckGradient(1);
 
   cout << endl << "Theta_grad 0 exact: " << endl;
   cout << grad_exact << endl;
@@ -147,14 +147,14 @@ void NNetwork::CheckGradientDriver(std::vector<Digit> data) {
 }
 
 // calculate gradients directly and output
-mat NNetwork::CheckGradient(std::vector<Digit> data, int k) {
+mat NNetwork::CheckGradient(size_t k) {
   double eps = 0.0001;
   double epsi = 1.0/eps;
   double fp,fm;
   mat grad = zeros<mat>(10,2);
 
-  for(int i = 0; i < 2; ++i) {
-    for(int j = 0; j < 10; ++j) {
+  for(arma::uword i = 0; i < 2; ++i) {
+    for(arma::uword j = 0; j < 10; ++j) {
       theta[k](j,i) += eps;
       fp = CostFunction(false);
       theta[k](j,i) -= 2*eps;
@@ -171,14 +171,14 @@ mat NNetwork::CheckGradient(std::vector<Digit> data, int k) {
 
 // after evaluating a digit, backpropagate to obtain gradients
 // function assumes a and z layers have been determined
-void NNetwork::BackpropagateSingleDigit(Digit &input) {
+void NNetwork::BackpropagateSingleDigit(const Digit &input) {
   vec inputval(input.GetLabel());
 
-  for(int i = 0; i < n; ++i)  
+  for(size_t i = 0; i < n; ++i)  
     delta[i].zeros();
 
   delta[n-1] = a[n-1] - inputval;
-  for(int i = n - 2; i > 0; --i) {
+  for(size_t i = n - 2; i > 0; --i) {
     delta[i] = (theta[i].submat(span::all,span(1,l_size[i]))).t()*delta[i+1] % SigmoidGradient(i);
   }
 
@@ -186,7 +186,7 @@ void NNetwork::BackpropagateSingleDigit(Digit &input) {
 }
 
 // evaluate a single input digit with the current network and return output layer 
-bool NNetwork::EvaluateSingleDigit(Digit &input) {
+bool NNetwork::EvaluateSingleDigit(const Digit &input) {
   if(IsEmpty()) {
     cout << "NNetwork is empty!" << endl;
     return false;
@@ -200,7 +200,7 @@ bool NNetwork::EvaluateSingleDigit(Digit &input) {
   }
 
   SetInputLayer(input.GetValue());
-  for(int i = 0; i < n - 2; ++i) {
+  for(size_t i = 0; i < n - 2; ++i) {
     z[i+1] = theta[i]*a[i];
     a[i+1].subvec(1,a[i+1].size()-1) = Sigmoid(i+1);
 
@@ -218,14 +218,14 @@ bool NNetwork::EvaluateSingleDigit(Digit &input) {
 double NNetwork::MinimizeNetwork() {
   const double eps_convergence = 1e-02;
 
-  clock_t t,t1;
+  clock_t t;
 
   double stepmax;
 
 // vectorise parameters
   vec p = MatrixToVector(theta);
 
-  int dim = p.size();
+  arma::uword dim = p.size();
   mat hesseinv = eye<mat>(dim,dim);
 
   vec pnew = zeros<vec>(dim); // new position
@@ -249,11 +249,11 @@ double NNetwork::MinimizeNetwork() {
       cout << endl;
     else {
       t = clock() - t;
-      cout << "  " << (double)t/CLOCKS_PER_SEC << " s" << endl;
+      cout << "  " << static_cast<double>(t)/CLOCKS_PER_SEC << " s" << endl;
       t = clock();
     }
 
-    stepmax = 100.0*max(sqrt(accu(p % p)),static_cast<double>(p.size()));
+    stepmax = 100.0*std::max(sqrt(accu(p % p)),static_cast<double>(p.size()));
     fval = linesearch(p,fval,grad,xi,pnew,stepmax);
 
     xi = pnew - p;
@@ -266,7 +266,7 @@ double NNetwork::MinimizeNetwork() {
     dgrad = grad;
     grad = MatrixToVector(theta_grad);
 
-    double den = max(fval,1.0);
+    double den = std::max(fval,1.0);
     if((abs(grad).max())*(abs(p).max())/den < 1e-05)
       return fval; // gradient convergence achieved
 
@@ -307,12 +307,10 @@ void NNetwork::UpdateHesseInverse(mat &hesseinv,double fac1, double fac2, double
   double *cr = dgrad.memptr(); // gradient difference
   double *cc = dgrad.memptr(); // gradient difference
 
-  int len = xi.size();
-  int nr = hesseinv.n_rows;
-  int nc = hesseinv.n_cols;
+  arma::uword len = xi.size();
 
-  for(int col = 0; col < len; ++col) {
-    for(int row = 0; row < len; ++row) {
+  for(arma::uword col = 0; col < len; ++col) {
+    for(arma::uword row = 0; row < len; ++row) {
       *h = *h + fac1*(*ar)*(*ac) - fac2*(*br)*(*bc) + fac3*(*cr)*(*cc);
 
       h++;
@@ -337,60 +335,61 @@ void NNetwork::UpdateHesseInverse(mat &hesseinv,double fac1, double fac2, double
 double NNetwork::linesearch(vec xold, double fold, vec gold, vec p, vec &xnew, double stepmax) {
   const double alpha = 1e-04;
 
-  double lambda = 1.0;
-  double lambdamin = 1e-07/fabs(p.max());
+  double loc_lambda = 1.0; // local lambda var
+  double loc_lambdamin = 1e-07/fabs(p.max());
 
   double slope = accu(gold % p);
 
   double fnew,tmplambda;
-  double fval2,lambda2;
+  double fval2 = 0.0;
+  double lambda2 = 0.0;
+  double fold2 = 0.0;
   double dlambda,ll1,ll2;
-  double a,b,rhs1,rhs2,fold2;
+  double afac,bfac,rhs1,rhs2;
   double disc; // discriminant
 
-  int counter = 0;
   if(sqrt(accu(p % p)) > stepmax)
     p = p*stepmax/sqrt(accu(p % p));
 
   for(;;) {
-    xnew = xold + lambda*p;
+    xnew = xold + loc_lambda*p;
     VectorToMatrix(xnew,theta);
     fnew = CostFunction(false);
 
-    if(lambda < lambdamin) {
+    if(loc_lambda < loc_lambdamin) {
       xnew = xold;
       return fold;
     }
-    else if(fnew <= fold + alpha*lambda*slope) {
+    else if(fnew <= fold + alpha*loc_lambda*slope) {
       return fnew;
     }
     else {
-      if(lambda == 1.0)
+      if(loc_lambda == 1.0)
         tmplambda = -0.5*slope/(fnew - fold - slope);
       else { // cubic formula
-        rhs1 = fnew - fold - lambda*slope;
+        rhs1 = fnew - fold - loc_lambda*slope;
         rhs2 = fval2 - fold2 - lambda2*slope;
 
-        ll1 = lambda*lambda;
+        ll1 = loc_lambda*loc_lambda;
         ll2 = lambda2*lambda2;
-        dlambda = lambda - lambda2;
-        a = (rhs1/ll1 - rhs2/ll2)/dlambda;
-        b = (-lambda2*rhs1/ll1 + lambda*rhs2/ll2)/dlambda;
-        if(a == 0.0)
-          tmplambda = -0.5*slope/b;
+        dlambda = loc_lambda - lambda2;
+        afac = (rhs1/ll1 - rhs2/ll2)/dlambda;
+        bfac = (-lambda2*rhs1/ll1 + loc_lambda*rhs2/ll2)/dlambda;
+        if(afac == 0.0)
+          tmplambda = -0.5*slope/bfac;
         else {
-          disc = b*b - 3.0*a*slope;
+          disc = bfac*bfac - 3.0*afac*slope;
           if(disc < 0.0) {
             cout << "Error in linesearch - discriminant" << endl;
             return fold;
           }
-          tmplambda = max((-b + sqrt(disc))/(3.0*a),0.5*lambda);
+          tmplambda = std::max((-bfac + sqrt(disc))/(3.0*afac),0.5*loc_lambda);
         }
       }
-      lambda2 = lambda;
+      lambda2 = loc_lambda;
       fval2 = fnew;
       fold2 = fold;
-      lambda = max(tmplambda,0.1*lambda);
+      loc_lambda = std::max(tmplambda,0.1*loc_lambda);
     }
   } // end for loop
 
@@ -401,7 +400,7 @@ double NNetwork::linesearch(vec xold, double fold, vec gold, vec p, vec &xnew, d
   bool NNetwork::SetInputLayer(std::vector<double> in) {
     a[0][0] = 1.0;
 
-    for(int i = 1; i < a[0].size(); ++i)
+    for(arma::uword i = 1; i < a[0].size(); ++i)
       a[0][i] = in[i-1];
 
     return true;
@@ -413,14 +412,14 @@ double NNetwork::linesearch(vec xold, double fold, vec gold, vec p, vec &xnew, d
   }
 
 // setup a network name
-  void NNetwork::SetName(std::string name) {
-    this->name = name;
+  void NNetwork::SetName(std::string new_name) {
+    this->name = new_name;
 
     return;
   }  
 
 // get number of layers
-  int NNetwork::GetNumLayers() {
+  size_t NNetwork::GetNumLayers() {
     return this->n;
   }
 
@@ -448,7 +447,7 @@ void NNetwork::PrintStatus(bool verbose_layers, bool verbose_matrices) {
   cout << "Number of layers: " << this->n << endl;
 
 // output 'a' layers
-  for(int i = 0; i < n; ++i) {
+  for(size_t i = 0; i < n; ++i) {
     cout << "Layer a, number " << i << ", size: " << size(a[i]) << endl;
     if(verbose_layers)
       cout << a[i] << endl;
@@ -456,7 +455,7 @@ void NNetwork::PrintStatus(bool verbose_layers, bool verbose_matrices) {
 
 // output 'z' layers
   cout << endl;
-  for(int i = 0; i < n; ++i) {
+  for(size_t i = 0; i < n; ++i) {
     cout << "Layer z, number " << i << ", size: " << size(z[i]) << endl;
     if(verbose_layers)
       cout << z[i] << endl;
@@ -464,7 +463,7 @@ void NNetwork::PrintStatus(bool verbose_layers, bool verbose_matrices) {
 
 // output 'delta' layers
   cout << endl;
-  for(int i = 0; i < n; ++i) {
+  for(size_t i = 0; i < n; ++i) {
     cout << "Layer delta, number " << i << ", size: " << size(delta[i]) << endl;
     if(verbose_layers)
       cout << delta[i] << endl;
@@ -472,7 +471,7 @@ void NNetwork::PrintStatus(bool verbose_layers, bool verbose_matrices) {
 
 // output theta matrices
   cout << endl << "Number of parameter matrices: " << n - 1 << endl;
-  for(int i = 0; i < n - 1; ++i) {
+  for(size_t i = 0; i < n - 1; ++i) {
     cout << "Theta " << i << ", size: " << size(theta[i]) << ", # rows: " << theta[i].n_rows << ", # cols: " << theta[i].n_cols << endl;
     if(verbose_matrices)
       cout << theta[i] << endl;
@@ -480,7 +479,7 @@ void NNetwork::PrintStatus(bool verbose_layers, bool verbose_matrices) {
 
 // output theta gradient matrices
   cout << endl << "Number of gradient matrices: " << n - 1 << endl;
-  for(int i = 0; i < n - 1; ++i) {
+  for(size_t i = 0; i < n - 1; ++i) {
     cout << "Theta_grad " << i << ", size: " << size(theta_grad[i]) << ", # rows: " << theta_grad[i].n_rows << ", # cols: " << theta_grad[i].n_cols << endl;
     if(verbose_matrices)
       cout << theta_grad[i] << endl;
@@ -512,19 +511,19 @@ void NNetwork::LoadTestingData(std::vector<Digit> data) {
 void NNetwork::SaveNetwork(std::string fname) {
   std::ofstream outfile(fname, ios::out);
 
-  int n_layer = l_size.size();
+  size_t n_layer = l_size.size();
 
   outfile << l_size.size() << endl; // number of layers
-  for(int i = 0; i < n_layer; ++i)
+  for(size_t i = 0; i < n_layer; ++i)
     outfile << l_size[i] << " "; // size of layers
   outfile << endl;
 
-  for(int layer = 0; layer < n_layer - 1; ++layer) {
-    int nr = theta[layer].n_rows; // size of each matrix
-    int nc = theta[layer].n_cols;
+  for(size_t layer = 0; layer < n_layer - 1; ++layer) {
+    arma::uword nr = theta[layer].n_rows; // size of each matrix
+    arma::uword nc = theta[layer].n_cols;
     outfile << nr << " " << nc << endl;
-    for(int row = 0; row < nr; ++row) {
-      for(int col = 0; col < nc; ++col) // output of matrices
+    for(arma::uword row = 0; row < nr; ++row) {
+      for(arma::uword col = 0; col < nc; ++col) // output of matrices
         outfile << std::setprecision(17) << theta[layer](row,col) << " " ;
       outfile << endl;
     }
@@ -534,15 +533,15 @@ void NNetwork::SaveNetwork(std::string fname) {
 }
 
 
-vec NNetwork::Sigmoid(int k) {
+vec NNetwork::Sigmoid(size_t k) {
   vec t = z[k];
-  for(int i = 0; i < t.size(); ++i)
+  for(arma::uword i = 0; i < t.size(); ++i)
     t[i] = exp(-t[i]);
 
   return 1.0/(1.0 + t);
 }
 
-vec NNetwork::SigmoidGradient(int k) {
+vec NNetwork::SigmoidGradient(size_t k) {
   vec t = Sigmoid(k);
 
   return t % (1.0 - t);
@@ -552,35 +551,28 @@ vec NNetwork::SigmoidGradient(int k) {
 vec NNetwork::MatrixToVector(std::vector<mat> m) {
   vec p;
 
-  int mnum = m.size();
+  size_t mnum = m.size();
   if(mnum < 1) {
     cout << "MatrixToVector - Error in number of matrices." << endl;
     return p;
   }
 
   p = vectorise(m[0]);
-  for(int i = 1; i < mnum; i++)
+  for(size_t i = 1; i < mnum; i++)
     p = join_cols(p,vectorise(m[i]));
 
   return p;
 }
 
 void NNetwork::VectorToMatrix(vec p, std::vector<mat> &m) {
-  int ndim = m.size();
+  size_t ndim = m.size();
 
-  int vidx = 0;
-  for(int i = 0; i < ndim; ++i) {
-    for(int col = 0; col < m[i].n_cols; ++col)
-      for(int row = 0; row < m[i].n_rows; ++row)
+  arma::uword vidx = 0;
+  for(size_t i = 0; i < ndim; ++i) {
+    for(arma::uword col = 0; col < m[i].n_cols; ++col)
+      for(arma::uword row = 0; row < m[i].n_rows; ++row)
         m[i].at(row,col) = p.at(vidx++);
   }
 
   return;
-}
-
-double NNetwork::max(double a, double b) {
-  if(a > b)
-    return a;
-  else
-    return b;
 }

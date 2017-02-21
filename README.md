@@ -13,3 +13,5 @@ There are two options to set uo the network:
 Linear algebra is handled by the <a href="http://arma.sourceforge.net/">Armadillo linear algebra library</a>. It is generally included in most linux distributions (though not necessarily the latest version). During compilation the <code>-larmadillo</code> switch is used.
 
 As it is, the code will construct a neural network with two hidden layers of size 15, minimize the netowrk and test on all the training and testing data. One should get around 95% accuracy on the training data, and 94% on the testing data. 
+
+While writing I wasn't perfectly consistent in naming variables and functions, and the style is sometimes problematic (member variables without prefixes and similar). 

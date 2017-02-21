@@ -30,43 +30,40 @@ int main() {
   ifstream ftest_labels(test_labels, ios::in | ios::binary);
   ifstream ftest_images(test_images, ios::in | ios::binary);
 
-  unsigned char tmp;
-  int n_train_images,n_train_labels,n_test_images,n_test_labels;
-  int n_image_x,n_image_y,n_image_pixels;
+  unsigned int n_train_images,n_train_labels,n_test_images,n_test_labels;
+  unsigned int n_image_x,n_image_y;
 
   for(int i = 0; i < 4; i++) {
-    tmp = ftrain_labels.get();
-    tmp = ftrain_images.get();
-    tmp = ftest_images.get();
-    tmp = ftest_labels.get();
+    ftrain_labels.get();
+    ftrain_images.get();
+    ftest_images.get();
+    ftest_labels.get();
   }
 
 // read training data
 // number of labels in the file
-  ftrain_labels.read((char *)&n_train_labels,sizeof(n_train_labels));
+  ftrain_labels.read(reinterpret_cast<char *>(&n_train_labels),sizeof(n_train_labels));
   n_train_labels = __builtin_bswap32(n_train_labels); // convert endian due to file format
 
 // number of images in the file
-  ftrain_images.read((char *)&n_train_images,sizeof(n_train_images));
+  ftrain_images.read(reinterpret_cast<char *>(&n_train_images),sizeof(n_train_images));
   n_train_images = __builtin_bswap32(n_train_images); // convert endian due to file format
 
 // number of pixels in x dimension per image
-  ftrain_images.read((char *)&n_image_x,sizeof(n_image_x));
+  ftrain_images.read(reinterpret_cast<char *>(&n_image_x),sizeof(n_image_x));
   n_image_x = __builtin_bswap32(n_image_x); // convert endian due to file format
 
 // number of pixels in y dimension per image
-  ftrain_images.read((char *)&n_image_y,sizeof(n_image_y));
+  ftrain_images.read(reinterpret_cast<char *>(&n_image_y),sizeof(n_image_y));
   n_image_y = __builtin_bswap32(n_image_y); // convert endian due to file format
 
-  n_image_pixels = n_image_x*n_image_y;
-
-  for(int i = 0; i < n_train_labels; i++) {
-    tmplabel = ftrain_labels.get();
+  for(unsigned int i = 0; i < n_train_labels; i++) {
+    tmplabel = static_cast<unsigned char>(ftrain_labels.get());
 
     tmpvec.clear();
-    for(int i = 0; i < n_image_y; i++)
-      for(int j = 0; j < n_image_x; j++)
-        tmpvec.push_back(ftrain_images.get());
+    for(unsigned int row = 0; row < n_image_y; ++row)
+      for(unsigned int col = 0; col < n_image_x; ++col)
+        tmpvec.push_back(static_cast<unsigned char>(ftrain_images.get()));
 
     tmpdigit.SetLabel(tmplabel);
     tmpdigit.SetSize(n_image_x,n_image_y);
@@ -77,28 +74,28 @@ int main() {
 
 // read testing data
 // number of labels in the file
-  ftest_labels.read((char *)&n_test_labels,sizeof(n_test_labels));
+  ftest_labels.read(reinterpret_cast<char *>(&n_test_labels),sizeof(n_test_labels));
   n_test_labels = __builtin_bswap32(n_test_labels); // convert endian due to file format
 
 // number of images in the file
-  ftest_images.read((char *)&n_test_images,sizeof(n_test_images));
+  ftest_images.read(reinterpret_cast<char *>(&n_test_images),sizeof(n_test_images));
   n_test_images = __builtin_bswap32(n_test_images); // convert endian due to file format
 
 // number of pixels in x dimension per image
-  ftest_images.read((char *)&n_image_x,sizeof(n_image_x));
+  ftest_images.read(reinterpret_cast<char *>(&n_image_x),sizeof(n_image_x));
   n_image_x = __builtin_bswap32(n_image_x); // convert endian due to file format
 
 // number of pixels in y dimension per image
-  ftest_images.read((char *)&n_image_y,sizeof(n_image_y));
+  ftest_images.read(reinterpret_cast<char *>(&n_image_y),sizeof(n_image_y));
   n_image_y = __builtin_bswap32(n_image_y); // convert endian due to file format
 
-  for(int i = 0; i < n_test_labels; i++) {
-    tmplabel = ftest_labels.get();
+  for(unsigned int i = 0; i < n_test_labels; ++i) {
+    tmplabel = static_cast<unsigned char>(ftest_labels.get());
 
     tmpvec.clear();
-    for(int i = 0; i < n_image_y; i++)
-      for(int j = 0; j < n_image_x; j++)
-        tmpvec.push_back(ftest_images.get());
+    for(unsigned int row = 0; row < n_image_y; ++row)
+      for(unsigned int col = 0; col < n_image_x; ++col)
+        tmpvec.push_back(static_cast<unsigned char>(ftest_images.get()));
 
     tmpdigit.SetLabel(tmplabel);
     tmpdigit.SetSize(n_image_x,n_image_y);
@@ -107,7 +104,7 @@ int main() {
     data_test.push_back(tmpdigit);
   }
 
-  std::vector<int> lsizes {784,15,15,10};
+  std::vector<arma::uword> lsizes {784,25,10};
 
   NNetwork neuralnet("Test network",lsizes);
 

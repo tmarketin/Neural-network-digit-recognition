@@ -19,12 +19,12 @@ public:
   int GetDigit();
 
   void SetLabel(unsigned char k);
-  std::vector<double> GetLabel();
+  std::vector<double> GetLabel() const;
 
-  void SetSize(int x, int y);
+  void SetSize(unsigned int x, unsigned int y);
 
   bool SetValue(std::vector<unsigned char> v);
-  std::vector<double> GetValue();
+  std::vector<double> GetValue() const;
 
   friend std::ostream& operator<< (std::ostream &out, const Digit &dig);
 };
